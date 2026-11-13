@@ -1,12 +1,13 @@
 import { sb } from '../supabase.js';
 import { auth, refreshAuth } from '../auth.js';
-import { esc } from '../ui.js';
+import { esc, logo } from '../ui.js';
 
 const redirectUrl = () => location.origin + location.pathname;
 
 function formPage(root, { title, sub, fields, button, foot, onSubmit }) {
   root.innerHTML = `
   <div class="auth-card">
+    <div class="auth-logo">${logo()}</div>
     <h1>${esc(title)}</h1><p class="sub">${esc(sub)}</p>
     <form novalidate>
       ${fields.map(f => `<label class="field"><span>${esc(f.label)}</span>
@@ -48,29 +49,6 @@ export function login(root) {
       if (error) throw error;
       await refreshAuth();
       location.hash = '#/';
-    },
-  });
-}
-
-export function signup(root) {
-  if (needLoggedOut(root)) return;
-  formPage(root, {
-    title: 'Create your account', sub: 'Join GolpoTune, your favourite audio station.',
-    fields: [
-      { name: 'name', label: 'Your name', type: 'text', auto: 'name' },
-      { name: 'email', label: 'Email', type: 'email', auto: 'email' },
-      { name: 'password', label: 'Password (at least 6 characters)', type: 'password', auto: 'new-password', min: 6 },
-    ],
-    button: 'Sign up',
-    foot: 'Already have an account? <a href="#/login">Log in</a>',
-    onSubmit: async (v, say) => {
-      const { data, error } = await sb.auth.signUp({
-        email: v.email.trim(), password: v.password,
-        options: { data: { display_name: v.name.trim() }, emailRedirectTo: redirectUrl() },
-      });
-      if (error) throw error;
-      if (data.session) { await refreshAuth(); location.hash = '#/'; return; }
-      say('Almost done! We sent a verification link to your email. Open it, then log in.', 'ok');
     },
   });
 }
