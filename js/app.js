@@ -6,7 +6,8 @@ import { renderChrome, toast, emptyState } from './ui.js';
 import { home } from './views/home.js';
 import { browse } from './views/browse.js';
 import { story } from './views/story.js';
-import { login, signup, forgot, reset } from './views/auth.js';
+import { login, forgot, reset } from './views/auth.js';
+import { signup } from './views/signup.js';
 import { library, account } from './views/me.js';
 
 const routes = [
@@ -16,7 +17,7 @@ const routes = [
   [/^library$/, 'library', library],
   [/^account$/, 'account', account],
   [/^login$/, 'login', login],
-  [/^signup$/, 'login', signup],
+  [/^signup(?:\/(details|interests|welcome))?$/, 'signup', signup],
   [/^forgot$/, 'login', forgot],
   [/^reset$/, 'login', reset],
 ];

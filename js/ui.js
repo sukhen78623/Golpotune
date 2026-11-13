@@ -20,13 +20,15 @@ export function toast(msg, type = '') {
   setTimeout(() => t.remove(), 3400);
 }
 
+export const logo = () => '<span class="lg-g">Golpo</span><span class="lg-t">Tune</span>';
+
 const GRADS = {
   horror: ['#3a0d1f', '#b02a52'], thriller: ['#0f2027', '#2c7a96'], mystery: ['#1f1c3a', '#6d5bb5'],
   romance: ['#5b1a3a', '#ff6b9d'], fantasy: ['#1d2b64', '#9a5cf0'], fiction: ['#134e5e', '#71b280'],
   adventure: ['#7a3e00', '#f2a65a'], drama: ['#3a1c71', '#d76d77'], biography: ['#2b2d34', '#8a93ad'],
 };
 export const gradFor = slug => {
-  const g = GRADS[slug] || ['#25223d', '#5a4fa0'];
+  const g = GRADS[slug] || ['#12303a', '#2a7f8c'];
   return `linear-gradient(145deg,${g[0]},${g[1]})`;
 };
 
@@ -89,10 +91,11 @@ export const skeletonGrid = () =>
 
 // top bar + mobile bottom bar
 export function renderChrome(name) {
+  document.body.classList.toggle('focus', name === 'signup');
   const initial = esc((auth.profile?.display_name || auth.user?.email || '?').charAt(0).toUpperCase());
   const links = [['#/', 'Home', 'home'], ['#/browse', 'Browse', 'browse'], ['#/library', 'Library', 'library']];
   document.getElementById('topbar').innerHTML = `
-    <a class="logo" href="#/" aria-label="GolpoTune home">Golpo<span>Tune</span></a>
+    <a class="logo" href="#/" aria-label="GolpoTune home">${logo()}</a>
     <nav class="topnav" aria-label="Main">
       ${links.map(([h, t, k]) => `<a href="${h}" class="${name === k ? 'on' : ''}">${t}</a>`).join('')}
     </nav>

@@ -21,13 +21,17 @@ export async function getHomeData() {
   for (const it of items) {
     if (it.story && it.story.is_published) (picked[it.section_key] ||= []).push(it.story);
   }
-  const auto = { hero: latest.slice(0, 1), trending: popular, recently_added: latest, premium_exclusives: premium };
+  const auto = { hero: latest.slice(0, 5), trending: popular, recently_added: latest, premium_exclusives: premium };
   const sections = secs.map(s => ({
     key: s.key, title: s.title,
     stories: picked[s.key]?.length ? picked[s.key] : (auto[s.key] || []),
   }));
+  // Featured slider: admin picks first, topped up with newest stories so it always has something to slide.
+  const heroSec = sections.find(s => s.key === 'hero');
+  const heroes = heroSec ? [...heroSec.stories] : [];
+  if (heroSec) for (const s of latest) { if (heroes.length >= 3) break; if (!heroes.some(h => h.id === s.id)) heroes.push(s); }
   return {
-    hero: sections.find(s => s.key === 'hero')?.stories[0] || null,
+    heroes: heroes.slice(0, 6),
     sections: sections.filter(s => s.key !== 'hero' && s.stories.length),
     categories: cats,
   };
@@ -84,4 +88,12 @@ export async function toggleFavourite(storyId) {
 export async function updateDisplayName(name) {
   must(await sb.from('profiles').update({ display_name: name }).eq('id', auth.user.id));
   auth.profile = { ...auth.profile, display_name: name };
+}
+
+// Stories from the genres a user picked while signing up.
+export async function getPicksForGenres(slugs) {
+  if (!slugs?.length) return [];
+  const cats = must(await sb.from('categories').select('id,slug').in('slug', slugs));
+  if (!cats.length) return [];
+  return must(await published().in('category_id', cats.map(c => c.id)).order('play_count', { ascending: false }).limit(12));
 }
