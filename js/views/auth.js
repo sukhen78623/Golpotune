@@ -55,7 +55,7 @@ export function login(root) {
 export function signup(root) {
   if (needLoggedOut(root)) return;
   formPage(root, {
-    title: 'Create your account', sub: 'Free forever. No ads, ever.',
+    title: 'Create your account', sub: 'Join GolpoTune, your favourite audio station.',
     fields: [
       { name: 'name', label: 'Your name', type: 'text', auto: 'name' },
       { name: 'email', label: 'Email', type: 'email', auto: 'email' },
