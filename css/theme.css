@@ -32,26 +32,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
 h1,h2,h3{font-family:Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-.02em}
 .cover .ph{font-family:Inter,system-ui,sans-serif;font-weight:700}
 
-/* ---------- logo ---------- */
+/* ---------- logo: music note + "Golpo" (white) + "Tune" (colour), simple Times New Roman style ---------- */
 .logo-link{display:inline-flex;align-items:center;--s:1}
 .logo-link.lg{--s:1.45}
-.logo{display:inline-flex;align-items:baseline;gap:calc(4px*var(--s,1));line-height:1;white-space:nowrap}
-.logo .g{font-family:Inter,system-ui,sans-serif;font-weight:700;font-size:calc(1.3rem*var(--s,1));letter-spacing:-.03em;color:#fff}
-.logo .t{display:inline-block;position:relative;font-family:'Kaushan Script','Segoe Script','Brush Script MT',cursive;font-weight:400;font-size:calc(1.45rem*var(--s,1));
-  padding:0 calc(2px*var(--s,1)) calc(5px*var(--s,1));background:none;-webkit-background-clip:border-box;background-clip:border-box;
-  color:var(--accent-hi);-webkit-text-fill-color:var(--accent-hi);animation:tuneFloat 3.2s ease-in-out infinite}
-/* intro: four dots bounce, then "Tune" is written in (plays once per visit) */
-.logo .dots{display:none}
-.logo.intro .dots{position:absolute;left:0;right:0;top:50%;margin-top:calc(-3px*var(--s,1));display:flex;justify-content:center;gap:calc(5px*var(--s,1));pointer-events:none;
-  animation:dotsOut .3s ease 1.55s forwards}
-.logo.intro .dots i{width:calc(6px*var(--s,1));height:calc(6px*var(--s,1));border-radius:50%;background:var(--accent-hi);animation:dotBounce .7s ease-in-out 2}
-.logo.intro .dots i:nth-child(2){animation-delay:.1s}.logo.intro .dots i:nth-child(3){animation-delay:.2s}.logo.intro .dots i:nth-child(4){animation-delay:.3s}
-.logo.intro .w{display:inline-block;clip-path:inset(-20% 100% -20% 0);animation:tuneWrite .8s cubic-bezier(.3,.7,.2,1) 1.6s forwards}
-@keyframes dotBounce{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(calc(-7px*var(--s,1)));opacity:1}}
-@keyframes dotsOut{to{opacity:0;visibility:hidden}}
-@keyframes tuneWrite{to{clip-path:inset(-20% -10% -20% 0)}}
-@media (prefers-reduced-motion:reduce){.logo.intro .dots{display:none}.logo.intro .w{clip-path:none;animation:none}}
-@keyframes tuneFloat{0%,100%{transform:translateY(0);text-shadow:0 0 10px rgba(229,138,167,.25)}50%{transform:translateY(-2px);text-shadow:0 0 20px rgba(229,138,167,.6)}}
+.logo{display:inline-flex;align-items:center;gap:calc(7px*var(--s,1));line-height:1;white-space:nowrap;
+  font-family:'Times New Roman',Times,'Liberation Serif',serif;font-weight:700;font-size:calc(1.6rem*var(--s,1));letter-spacing:.005em}
+.logo .ico{flex:none;width:calc(22px*var(--s,1));height:calc(22px*var(--s,1));fill:var(--accent-hi)}
+.logo .g,.logo .t{font:inherit;letter-spacing:inherit}
+.logo .g{color:#fff}
+.logo .t{color:var(--accent-hi);-webkit-text-fill-color:var(--accent-hi);background:none;padding:0;margin:0 0 0 calc(-7px*var(--s,1));font:inherit;animation:none}
 .footer .logo{justify-content:center}
 
 /* ---------- glass bars & surfaces ---------- */
