@@ -3,9 +3,11 @@ import { auth } from './auth.js';
 
 export const GENDERS = [['male', 'Male'], ['female', 'Female'], ['other', 'Other'], ['prefer_not', 'Prefer not to say']];
 export const genderLabel = k => (GENDERS.find(g => g[0] === k) || [])[1] || '';
-export const GENRE_EMOJI = { horror: '👻', thriller: '⚡', mystery: '🔍', romance: '💖', fantasy: '🐉', fiction: '📖', adventure: '🧭', drama: '🎭', biography: '👤' };
 export const GENRE_FALLBACK = ['Horror', 'Thriller', 'Mystery', 'Romance', 'Fantasy', 'Fiction', 'Adventure', 'Drama', 'Biography']
   .map(n => ({ name: n, slug: n.toLowerCase() }));
+
+// The GolpoTune logo: an animated sound-wave mark + "Golpo" + a handwritten, gently waving "Tune"
+export const logo = () => `<span class="logo" role="img" aria-label="GolpoTune"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="g" aria-hidden="true">Golpo</span><span class="t" aria-hidden="true">${[...'Tune'].map((c, i) => `<b style="--i:${i}">${c}</b>`).join('')}</span></span>`;
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -27,9 +29,9 @@ export function toast(msg, type = '') {
 }
 
 const GRADS = {
-  horror: ['#3a0d1f', '#b02a52'], thriller: ['#0f2027', '#2c7a96'], mystery: ['#1f1c3a', '#6d5bb5'],
-  romance: ['#5b1a3a', '#ff6b9d'], fantasy: ['#1d2b64', '#9a5cf0'], fiction: ['#134e5e', '#71b280'],
-  adventure: ['#7a3e00', '#f2a65a'], drama: ['#3a1c71', '#d76d77'], biography: ['#2b2d34', '#8a93ad'],
+  horror: ['#2a0a14', '#7a1f3d'], thriller: ['#1d1a24', '#4a4560'], mystery: ['#221432', '#5b3a7a'],
+  romance: ['#4a1428', '#b8486c'], fantasy: ['#1a1f3d', '#4f5aa6'], fiction: ['#14302f', '#3f8a82'],
+  adventure: ['#3a230f', '#b8763a'], drama: ['#2d1424', '#8a3f66'], biography: ['#25252b', '#6d6f80'],
 };
 export const gradFor = slug => {
   const g = GRADS[slug] || ['#25223d', '#5a4fa0'];
@@ -98,7 +100,7 @@ export function renderChrome(name) {
   const initial = esc((auth.profile?.display_name || auth.user?.email || '?').charAt(0).toUpperCase());
   const links = [['#/', 'Home', 'home'], ['#/browse', 'Browse', 'browse'], ['#/library', 'Library', 'library']];
   document.getElementById('topbar').innerHTML = `
-    <a class="logo" href="#/" aria-label="GolpoTune home"><span class="g">Golpo</span><span class="t">Tune</span></a>
+    <a class="logo-link" href="#/" aria-label="GolpoTune home">${logo()}</a>
     <nav class="topnav" aria-label="Main">
       ${links.map(([h, t, k]) => `<a href="${h}" class="${name === k ? 'on' : ''}">${t}</a>`).join('')}
     </nav>

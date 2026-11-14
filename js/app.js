@@ -2,7 +2,7 @@
 import { configured } from './supabase.js';
 import { initAuth, onAuth, auth } from './auth.js';
 import { toggleFavourite } from './api.js';
-import { renderChrome, toast, emptyState } from './ui.js';
+import { renderChrome, toast, emptyState, errorState } from './ui.js';
 import { home } from './views/home.js';
 import { browse } from './views/browse.js';
 import { story } from './views/story.js';
@@ -46,7 +46,8 @@ async function route() {
       document.title = 'GolpoTune - Your favourite audio station';
       renderChrome(name);
       window.scrollTo(0, 0);
-      await view(root, m.slice(1), ctx);
+      try { await view(root, m.slice(1), ctx); }
+      catch (e) { console.error(e); if (!ctx.stale()) root.innerHTML = errorState(e); }
       return;
     }
   }
@@ -88,13 +89,15 @@ document.addEventListener('error', e => {
 }, true);
 
 async function start() {
+  renderChrome(''); // the header shows straight away, so the page is never blank
   if (!configured) {
-    renderChrome('');
     root.innerHTML = `<div class="auth-card"><h1>Almost ready</h1>
       <p class="sub">GolpoTune is not connected to Supabase yet. Open <b>js/config.js</b>, paste your Supabase Project URL and anon key, then upload the site again.</p></div>`;
     return;
   }
-  try { await initAuth(); } catch (e) { console.error(e); }
+  try {
+    await Promise.race([initAuth(), new Promise((_, no) => setTimeout(() => no(new Error('Login service is slow')), 8000))]);
+  } catch (e) { console.error(e); }
   initPlayerUI();
   initPlayer().catch(e => console.error(e));
   // coming back from the verification email
