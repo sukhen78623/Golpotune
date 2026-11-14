@@ -25,7 +25,7 @@ export async function story(root, [slug], ctx) {
     }
 
     const meta = [s.category?.name, fmtDuration(s.duration_seconds)].filter(Boolean).map(esc).join(' · ');
-    const playLabel = locked ? 'Premium story' : resume ? `Resume · Chapter ${resume.chapter_number}` : 'Play';
+    const playLabel = locked ? 'Premium story' : resume ? (chapters.length > 1 ? `Resume · Chapter ${resume.chapter_number}` : 'Resume') : 'Play';
     root.innerHTML = `
     <div class="page">
       <div class="story-head">
@@ -42,13 +42,13 @@ export async function story(root, [slug], ctx) {
         </div>
       </div>
       ${locked ? '<div class="notice gold">This is a Premium story. It is available with a GolpoTune Premium membership.</div>' : ''}
-      <div class="section-head" style="margin-top:24px"><h2>Chapters</h2></div>
+      ${chapters.length === 1 ? '' : `<div class="section-head" style="margin-top:24px"><h2>Chapters</h2></div>
       ${chapters.length
         ? `<ol class="chapters">${chapters.map(c => `
             <li class="has-btn"><button class="chap-row" data-play="${esc(s.id)}" data-chapter-id="${esc(c.id)}">
               <span class="num">${c.chapter_number}</span><span class="ct">${esc(c.title)}</span><span class="dur">${fmtDuration(c.duration_seconds)}</span>
             </button></li>`).join('')}</ol>`
-        : '<div class="notice">Chapters have not been added yet.</div>'}
+        : '<div class="notice">Audio has not been added yet.</div>'}`}
     </div>`;
   } catch (e) {
     if (!ctx.stale()) root.innerHTML = errorState(e);

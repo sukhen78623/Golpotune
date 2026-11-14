@@ -239,11 +239,11 @@ async function storyEditor(body, id, stale) {
     finally { btn.disabled = false; }
   };
 
-  if (!isNew) await chaptersPanel(body.querySelector('#chapters-box'), s, stale);
-  else body.querySelector('#chapters-box').innerHTML = '<div class="panel"><h3>Chapters</h3><p class="muted">Save the story first, then you can add chapters and audio here.</p></div>';
+  if (!isNew) await audioSection(body.querySelector('#chapters-box'), s, stale);
+  else body.querySelector('#chapters-box').innerHTML = '<div class="panel"><h3>Audio</h3><p class="muted">Save the story first, then you can upload the audio here.</p></div>';
 }
 
-async function chaptersPanel(box, story, stale) {
+async function chaptersPanel(box, story, stale, onSingle) {
   const load = async () => {
     const chs = must(await sb.from('chapters').select('id,title,chapter_number,duration_seconds').eq('story_id', story.id).order('chapter_number'));
     const au = chs.length ? must(await sb.from('chapter_audio').select('chapter_id,r2_key').in('chapter_id', chs.map(c => c.id))) : [];
@@ -255,7 +255,8 @@ async function chaptersPanel(box, story, stale) {
 
   box.innerHTML = `
     <div class="panel"><h3>Chapters (${chs.length})</h3>
-      <p class="muted">Audio files: MP3 or M4A, up to 50 MB each. Large stories should be split into chapters.</p>
+      <p class="muted">Audio files: MP3 or M4A, up to 50 MB each.</p>
+      ${chs.length <= 1 && onSingle ? '<button type="button" class="btn btn-sm" id="tosingle">← Use one single audio instead (no chapters)</button>' : ''}
       ${chs.length ? chs.map(c => `
         <div class="adm-ch" data-ch="${esc(c.id)}">
           <div class="adm-main"><b>${c.chapter_number}. ${esc(c.title)}</b>
@@ -275,7 +276,8 @@ async function chaptersPanel(box, story, stale) {
       <button class="btn btn-primary" type="submit" id="chadd">Add chapter</button>
     </form>`;
 
-  const refresh = async () => { await syncDuration(story.id); await chaptersPanel(box, story, stale); };
+  const refresh = async () => { await syncDuration(story.id); await chaptersPanel(box, story, stale, onSingle); };
+  box.querySelector('#tosingle')?.addEventListener('click', () => onSingle());
 
   box.querySelector('#chform').onsubmit = async e => {
     e.preventDefault();
@@ -325,6 +327,43 @@ async function chaptersPanel(box, story, stale) {
         toast('Chapter deleted');
         await refresh();
       }
+    } catch (err) { toast(errText(err), 'err'); }
+  };
+}
+
+// Single audio story (default) or a story with chapters. Behind the scenes a single story is one chapter.
+async function audioSection(box, story, stale, force) {
+  const chs = must(await sb.from('chapters').select('id,title,chapter_number,duration_seconds').eq('story_id', story.id).order('chapter_number'));
+  if (stale()) return;
+  const mode = force || (chs.length > 1 ? 'chapters' : 'single');
+  if (mode === 'chapters') {
+    return chaptersPanel(box, story, stale, chs.length <= 1 ? () => audioSection(box, story, stale, 'single') : null);
+  }
+  const ch = chs[0] || null;
+  let has = false;
+  if (ch) has = !!must(await sb.from('chapter_audio').select('chapter_id,r2_key').eq('chapter_id', ch.id).maybeSingle());
+  const old = ch && has ? must(await sb.from('chapter_audio').select('r2_key').eq('chapter_id', ch.id).maybeSingle())?.r2_key : null;
+  box.innerHTML = `
+    <div class="panel adm-form"><h3>Audio</h3>
+      <p class="muted">Upload the story's audio file (MP3 or M4A, up to 50 MB).
+        ${has ? `<br><b class="ok">Audio uploaded</b>${ch.duration_seconds ? ' · ' + fmtDuration(ch.duration_seconds) : ''}` : '<br><b class="warn">No audio yet</b>'}</p>
+      <div class="adm-act"><label class="btn btn-primary">${has ? 'Replace audio' : 'Upload audio'}<input type="file" id="single-audio" accept="audio/*" hidden></label>
+        <button type="button" class="btn btn-sm" id="tochap">Story has chapters? Add chapters instead</button></div>
+    </div>`;
+  box.querySelector('#tochap').onclick = () => audioSection(box, story, stale, 'chapters');
+  box.querySelector('#single-audio').onchange = async e => {
+    const file = e.target.files[0]; if (!file) return;
+    if (file.size > MAX_AUDIO) { toast('Audio is over 50 MB. Please compress it, or use chapters.', 'err'); return; }
+    toast('Uploading… please wait');
+    try {
+      const dur = await audioDuration(file);
+      let id = ch?.id;
+      if (!id) id = must(await sb.from('chapters').insert({ story_id: story.id, title: story.title, chapter_number: 1, duration_seconds: dur || null }).select('id').single()).id;
+      else if (dur) must(await sb.from('chapters').update({ duration_seconds: dur }).eq('id', id));
+      await putAudio(story.id, id, file, old);
+      await syncDuration(story.id);
+      toast('Audio saved');
+      await audioSection(box, story, stale, 'single');
     } catch (err) { toast(errText(err), 'err'); }
   };
 }
