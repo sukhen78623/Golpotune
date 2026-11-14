@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+<defs><linearGradient id="g" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#4a1428"/><stop offset="1" stop-color="#b8486c"/></linearGradient></defs>
+<rect width="600" height="600" fill="url(#g)"/><circle cx="430" cy="190" r="92" fill="#ffd1df" opacity=".9"/><circle cx="470" cy="165" r="86" fill="#4a1428" opacity=".35"/><path d="M0 470 Q150 390 300 450 T600 420 V600 H0Z" fill="#000" opacity=".28"/><path d="M0 520 Q180 450 340 505 T600 480 V600 H0Z" fill="#000" opacity=".32"/>
+<text x="48" y="454" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="700" fill="#fff"><tspan x="48" dy="0">TEA FOR TWO,</tspan><tspan x="48" dy="58">RAIN FOR ONE</tspan></text>
+<text x="48" y="580" font-family="Arial, Helvetica, sans-serif" font-size="20" letter-spacing="2" fill="#fff" opacity=".7">ROMANCE</text>
+</svg>

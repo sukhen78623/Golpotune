@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+<defs><linearGradient id="g" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#4a1428"/><stop offset="1" stop-color="#b8486c"/></linearGradient></defs>
+<rect width="600" height="600" fill="url(#g)"/><path d="M-100 600 L100 0 H170 L-30 600Z" fill="#ffd1df" opacity="0.1"/><path d="M50 600 L250 0 H320 L120 600Z" fill="#ffd1df" opacity="0.15000000000000002"/><path d="M200 600 L400 0 H470 L270 600Z" fill="#ffd1df" opacity="0.1"/><path d="M350 600 L550 0 H620 L420 600Z" fill="#ffd1df" opacity="0.15000000000000002"/><path d="M500 600 L700 0 H770 L570 600Z" fill="#ffd1df" opacity="0.1"/><path d="M650 600 L850 0 H920 L720 600Z" fill="#ffd1df" opacity="0.15000000000000002"/><circle cx="445" cy="185" r="64" fill="#ffd1df" opacity=".85"/>
+<text x="48" y="454" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="700" fill="#fff"><tspan x="48" dy="0">LETTERS FROM</tspan><tspan x="48" dy="58">KASHI</tspan></text>
+<text x="48" y="580" font-family="Arial, Helvetica, sans-serif" font-size="20" letter-spacing="2" fill="#fff" opacity=".7">ROMANCE</text>
+</svg>
