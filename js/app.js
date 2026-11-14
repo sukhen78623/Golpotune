@@ -6,9 +6,11 @@ import { renderChrome, toast, emptyState } from './ui.js';
 import { home } from './views/home.js';
 import { browse } from './views/browse.js';
 import { story } from './views/story.js';
-import { login, forgot, reset } from './views/auth.js';
-import { signup } from './views/signup.js';
+import { login, signup, forgot, reset, hold } from './views/auth.js';
 import { library, account } from './views/me.js';
+import { about, terms, privacy, refund, cancellation } from './views/pages.js';
+import { initPlayer, playStory, unlock } from './player/engine.js';
+import { initPlayerUI } from './player/ui.js';
 
 const routes = [
   [/^$/, 'home', home],
@@ -17,22 +19,31 @@ const routes = [
   [/^library$/, 'library', library],
   [/^account$/, 'account', account],
   [/^login$/, 'login', login],
-  [/^signup(?:\/(details|interests|welcome))?$/, 'signup', signup],
+  [/^signup$/, 'login', signup],
   [/^forgot$/, 'login', forgot],
   [/^reset$/, 'login', reset],
+  [/^about$/, '', about],
+  [/^terms$/, '', terms],
+  [/^privacy$/, '', privacy],
+  [/^refund$/, '', refund],
+  [/^cancellation$/, '', cancellation],
 ];
 
 const root = document.getElementById('app');
 let token = 0;
+const yr = document.getElementById('yr');
+if (yr) yr.textContent = new Date().getFullYear();
 
 async function route() {
   const mine = ++token;
   const ctx = { stale: () => mine !== token };
   let path = location.hash.replace(/^#\/?/, '').split('?')[0];
   if (path.includes('=')) path = ''; // Supabase email links put tokens in the address
+  if (path !== 'signup') hold.signup = false;
   for (const [re, name, view] of routes) {
     const m = path.match(re);
     if (m) {
+      document.title = 'GolpoTune - Your favourite audio station';
       renderChrome(name);
       window.scrollTo(0, 0);
       await view(root, m.slice(1), ctx);
@@ -43,7 +54,7 @@ async function route() {
   root.innerHTML = emptyState('Page not found', 'That page does not exist.', '<a class="btn btn-primary" href="#/">Go home</a>');
 }
 
-// favourite hearts + retry buttons work everywhere
+// favourite hearts, play buttons and retry buttons work everywhere
 document.addEventListener('click', async e => {
   const fav = e.target.closest('[data-fav]');
   if (fav) {
@@ -59,6 +70,13 @@ document.addEventListener('click', async e => {
     } catch (err) {
       toast(err.message || 'Could not update favourite', 'err');
     } finally { buttons.forEach(b => (b.disabled = false)); }
+    return;
+  }
+  const play = e.target.closest('[data-play]');
+  if (play) {
+    e.preventDefault(); e.stopPropagation();
+    unlock(); // must happen inside the tap so phones allow sound
+    playStory(play.dataset.play, { chapterId: play.dataset.chapterId || null });
     return;
   }
   if (e.target.closest('[data-retry]')) route();
@@ -77,7 +95,13 @@ async function start() {
     return;
   }
   try { await initAuth(); } catch (e) { console.error(e); }
-  onAuth(() => route());
+  initPlayerUI();
+  initPlayer().catch(e => console.error(e));
+  // coming back from the verification email
+  if (window.__authError) toast('That link has expired or was already used. Please log in, or sign up again.', 'err');
+  else if (window.__fromEmail && auth.user) toast('Email verified. Welcome to GolpoTune!');
+  if (/access_token|error_description/.test(location.hash)) history.replaceState(null, '', location.pathname + '#/');
+  onAuth(() => { if (hold.signup && location.hash === '#/signup') return; route(); });
   window.addEventListener('hashchange', route);
   route();
 }
