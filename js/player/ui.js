@@ -5,7 +5,7 @@ import { esc, cover, badge, toast, fmtDuration, storyCard, sectionRow, ICON } fr
 import { buildRecs } from './recs.js';
 import {
   audio, player, SPEEDS, subscribe, currentChapter, duration, togglePlay, seek, skip, next, prev,
-  jumpToChapter, setSpeed, setVolume, setSleep, setAutoplayNext, setAutoplayRec,
+  jumpToChapter, closePlayer, setSpeed, setVolume, setSleep, setAutoplayNext, setAutoplayRec,
 } from './engine.js';
 
 const $ = s => document.querySelector(s);
@@ -79,7 +79,8 @@ function miniHTML() {
     <button class="chipbtn" data-act="speed" id="mp-speed" aria-label="Playback speed">1x</button>
     <label class="vol" aria-label="Volume">${I.vol}<input type="range" class="volrange" min="0" max="1" step="0.05" aria-label="Volume"></label>
     <button class="pbtn sm" data-open-full aria-label="Open full player">${I.up}</button>
-  </div>`;
+  </div>
+  <button class="pbtn sm mp-x" data-act="stop" aria-label="Close player">${I.x}</button>`;
 }
 
 /* ---------------- full player ---------------- */
@@ -89,7 +90,10 @@ function fullHTML() {
     <header class="fp-top">
       <button class="pbtn sm" data-act="close" aria-label="Close player">${I.down}</button>
       <div class="fp-label">Now playing</div>
-      <button class="pbtn sm" data-act="share" aria-label="Share story">${I.share}</button>
+      <div class="fp-right">
+        <button class="pbtn sm" data-act="share" aria-label="Share story">${I.share}</button>
+        <button class="pbtn sm" data-act="stop" aria-label="Stop and close player">${I.x}</button>
+      </div>
     </header>
     <div class="fp-tabs" role="tablist">
       ${TABS.map(([k, t]) => `<button class="fp-tab" role="tab" data-tab="${k}" aria-selected="${k === tab}">${t}</button>`).join('')}
@@ -449,6 +453,7 @@ function act(name) {
     case 'fwd': skip(30); break;
     case 'close': closeFull(); break;
     case 'share': share(); break;
+    case 'stop': { const wasOpen = open; closePlayer(); if (wasOpen && history.state?.gtPlayer) history.back(); break; }
     case 'speed': speedSheet(); break;
     case 'sleep': sleepSheet(); break;
     case 'playlist': playlistSheet(); break;
