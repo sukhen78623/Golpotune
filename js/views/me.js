@@ -4,7 +4,7 @@ import { auth, isPremium } from '../auth.js';
 import { getFavouriteStories, getCategories, updateProfile } from '../api.js';
 import {
   esc, storyCard, emptyState, errorState, skeletonGrid, toast, renderChrome,
-  GENDERS, GENRE_EMOJI, GENRE_FALLBACK, genderLabel,
+  GENDERS, GENRE_FALLBACK, genderLabel,
 } from '../ui.js';
 
 const loginPrompt = (title, text) =>
@@ -65,7 +65,7 @@ export async function account(root, _p, ctx) {
       <div class="panel">
         <h3>Favourite genres</h3>
         ${interests.length
-          ? `<div class="tags">${interests.map(s => `<span class="chip on"><span aria-hidden="true">${GENRE_EMOJI[s] || '✨'}</span> ${esc(genreName(s))}</span>`).join('')}</div>`
+          ? `<div class="tags">${interests.map(s => `<span class="chip on">${esc(genreName(s))}</span>`).join('')}</div>`
           : '<p class="muted">You have not chosen any genres yet.</p>'}
         <button class="btn btn-sm" data-edit style="margin-top:12px">${interests.length ? 'Change genres' : 'Add genres'}</button>
       </div>
@@ -103,7 +103,7 @@ export async function account(root, _p, ctx) {
           <label class="field"><span>Country</span><input name="country" type="text" maxlength="80" value="${esc(p.country || '')}"></label>
         </div>
         <fieldset class="field"><legend>Favourite genres (up to 3)</legend>
-          <div class="genres">${genres.map(g => `<button type="button" class="genre" data-g="${esc(g.slug)}" aria-pressed="${picked.includes(g.slug)}"><span class="emo" aria-hidden="true">${GENRE_EMOJI[g.slug] || '✨'}</span>${esc(g.name)}</button>`).join('')}</div>
+          <div class="genres">${genres.map(g => `<button type="button" class="genre" data-g="${esc(g.slug)}" aria-pressed="${picked.includes(g.slug)}">${esc(g.name)}</button>`).join('')}</div>
         </fieldset>
         <div class="form-msg" role="status"></div>
         <div class="btn-row"><button class="btn btn-primary" type="submit">Save changes</button><button class="btn" type="button" data-cancel>Cancel</button></div>

@@ -9,8 +9,9 @@ function slide(s, i, total) {
   const href = `#/story/${encodeURIComponent(s.slug)}`;
   const meta = [s.category?.name, s.author && `by ${s.author}`, fmtDuration(s.duration_seconds), s.access === 'premium' ? 'Premium' : 'Free']
     .filter(Boolean).map(esc).join(' · ');
+  const bg = s.cover_url ? `--bgimg:url(&quot;${esc(s.cover_url)}&quot;);` : '';
   return `
-  <section class="hero" style="--g:${gradFor(s.category?.slug)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
+  <section class="hero" style="--g:${gradFor(s.category?.slug)};${bg}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
     <div class="hero-text">
       <div class="eyebrow">Featured story</div>
       <h1>${esc(s.title)}</h1>

@@ -1,6 +1,6 @@
 import { sb } from '../supabase.js';
 import { auth, refreshAuth } from '../auth.js';
-import { esc, GENDERS, GENRE_EMOJI as EMOJI, GENRE_FALLBACK } from '../ui.js';
+import { esc, logo, GENDERS, GENRE_FALLBACK } from '../ui.js';
 import { getCategories } from '../api.js';
 
 const redirectUrl = () => location.origin + location.pathname;
@@ -63,7 +63,7 @@ const resetDraft = () => Object.assign(draft, { name: '', email: '', password: '
 
 const wizShell = (step, inner) => `
   <div class="auth-card wiz">
-    <a class="logo lg" href="#/" aria-label="GolpoTune home"><span class="g">Golpo</span><span class="t">Tune</span></a>
+    <a class="logo-link lg" href="#/" aria-label="GolpoTune home">${logo()}</a>
     <div class="stepper" role="img" aria-label="Step ${step} of 3">${[1, 2, 3].map(n => `<i class="${n <= step ? 'on' : ''}"></i>`).join('')}</div>
     ${inner}
   </div>`;
@@ -148,8 +148,7 @@ async function showInterestsStep(root) {
   root.innerHTML = wizShell(3, `
     <h1>What do you love to hear?</h1><p class="sub">Step 3 of 3 · Pick up to 3 genres. Optional.</p>
     <div class="genres" role="group" aria-label="Favourite genres">
-      ${genres.map(g => `<button type="button" class="genre" data-g="${esc(g.slug)}" aria-pressed="${draft.interests.includes(g.slug)}">
-        <span class="emo" aria-hidden="true">${EMOJI[g.slug] || '✨'}</span>${esc(g.name)}</button>`).join('')}
+      ${genres.map(g => `<button type="button" class="genre" data-g="${esc(g.slug)}" aria-pressed="${draft.interests.includes(g.slug)}">${esc(g.name)}</button>`).join('')}
     </div>
     <div class="form-msg" role="status" id="gmsg"></div>
     <button class="btn btn-primary" type="button" id="finish">Finish</button>
@@ -220,8 +219,8 @@ async function createAccount(root) {
 function showDone(root, { name, email, verified }) {
   root.innerHTML = `
   <div class="auth-card wiz done">
-    <div class="done-badge" aria-hidden="true">🎧</div>
-    <h1>Enjoy your <span class="grad-text">stories!</span></h1>
+    <div class="done-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></div>
+    <h1>Enjoy your <span class="accent-text">stories!</span></h1>
     <p class="sub">Welcome to GolpoTune, ${esc(name)}. Your favourite audio station is ready for you.</p>
     ${verified ? '' : `<div class="verify-note" role="status"><b>One last thing: verify your email</b>
       <span>We sent a link to <b>${esc(email)}</b>. Open it and you will land straight on your GolpoTune home screen, already logged in. If you cannot see it, check your spam folder.</span></div>`}
