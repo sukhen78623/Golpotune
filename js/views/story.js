@@ -1,6 +1,6 @@
 import { getStory, getProgress } from '../api.js';
 import { auth, canListen } from '../auth.js';
-import { esc, cover, badge, favBtn, fmtDuration, emptyState, errorState } from '../ui.js';
+import { esc, cover, badge, favBtn, fmtDuration, fmtPlays, emptyState, errorState } from '../ui.js';
 
 export async function story(root, [slug], ctx) {
   root.innerHTML = '<div class="page"><div class="skel" style="height:300px;margin:0 16px"></div></div>';
@@ -24,7 +24,7 @@ export async function story(root, [slug], ctx) {
       if (ctx.stale()) return;
     }
 
-    const meta = [s.category?.name, fmtDuration(s.duration_seconds)].filter(Boolean).map(esc).join(' · ');
+    const meta = [s.category?.name, fmtDuration(s.duration_seconds), fmtPlays(s.play_count)].filter(Boolean).map(esc).join(' · ');
     const playLabel = locked ? 'Premium story' : resume ? (chapters.length > 1 ? `Resume · Chapter ${resume.chapter_number}` : 'Resume') : 'Play';
     root.innerHTML = `
     <div class="page">
