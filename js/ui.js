@@ -20,6 +20,14 @@ export function fmtDuration(sec) {
   return `${Math.max(1, m)} min`;
 }
 
+// 1234 -> "1.2K plays"
+export const fmtPlays = n => {
+  n = Number(n) || 0;
+  if (n < 1) return '';
+  const v = n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(n);
+  return `${v} ${n === 1 ? 'play' : 'plays'}`;
+};
+
 export function toast(msg, type = '') {
   const t = document.createElement('div');
   t.className = 'toast ' + type;
@@ -70,7 +78,7 @@ export function storyCard(s, { pct = null } = {}) {
       <button class="play-fab" data-play="${esc(s.id)}" aria-label="Play ${esc(s.title)}">${ICON.play}</button>
     </div>
     <a class="card-title" href="${href}">${esc(s.title)}</a>
-    <div class="card-meta">${esc(s.category?.name || 'Story')} · ${fmtDuration(s.duration_seconds)}</div>
+    <div class="card-meta">${[esc(s.category?.name || 'Story'), fmtDuration(s.duration_seconds), fmtPlays(s.play_count)].filter(Boolean).join(' · ')}</div>
     ${pct !== null ? `<div class="bar"><i style="width:${pct}%"></i></div>` : ''}
   </article>`;
 }
