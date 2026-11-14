@@ -33,6 +33,7 @@ const fmt = t => {
   return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
 };
 
+const single = () => player.chapters.length <= 1;
 const TABS = [['now', 'Now Playing'], ['chapters', 'Chapters'], ['recs', 'Stories You May Like'], ['about', 'About Story']];
 let mini, full, tab = 'now', open = false, dragging = false, bookmarks = [], bookmarksFor = null;
 
@@ -59,15 +60,15 @@ function miniHTML() {
   <div class="mp-prog" aria-hidden="true"><i id="mp-bar"></i></div>
   <div class="mp-info" data-open-full role="button" tabindex="0" aria-label="Open full player">
     ${thumb(s)}
-    <div class="mp-text"><b>${esc(ch?.title || s.title)}</b><span>${esc(s.title)}</span></div>
+    <div class="mp-text"><b>${esc((!single() && ch?.title) || s.title)}</b><span>${esc(s.title)}</span></div>
   </div>
   <div class="mp-center">
     <div class="mp-btns">
-      <button class="pbtn sm hide-m" data-act="prev" aria-label="Previous chapter">${I.prev}</button>
+      ${single() ? '' : `<button class="pbtn sm hide-m" data-act="prev" aria-label="Previous chapter">${I.prev}</button>`}
       <button class="pbtn sm hide-m" data-act="rew" aria-label="Back 10 seconds">${I.rew}</button>
       <button class="pbtn play" data-act="toggle" aria-label="Play"></button>
       <button class="pbtn sm hide-m" data-act="fwd" aria-label="Forward 30 seconds">${I.fwd}</button>
-      <button class="pbtn sm hide-m" data-act="next" aria-label="Next chapter">${I.next}</button>
+      ${single() ? '' : `<button class="pbtn sm hide-m" data-act="next" aria-label="Next chapter">${I.next}</button>`}
     </div>
     <div class="mp-seekrow hide-m">
       <span id="mp-cur">0:00</span>
@@ -96,7 +97,7 @@ function fullHTML() {
       </div>
     </header>
     <div class="fp-tabs" role="tablist">
-      ${TABS.map(([k, t]) => `<button class="fp-tab" role="tab" data-tab="${k}" aria-selected="${k === tab}">${t}</button>`).join('')}
+      ${TABS.filter(([k]) => !(k === 'chapters' && single())).map(([k, t]) => `<button class="fp-tab" role="tab" data-tab="${k}" aria-selected="${k === tab}">${t}</button>`).join('')}
     </div>
     <div class="fp-body" id="fp-body" role="tabpanel"></div>
   </div>`;
@@ -110,7 +111,7 @@ function nowHTML() {
     <div class="np-cover">${cover(s)}${badge(s)}</div>
     <div class="np-meta">
       <h2>${esc(s.title)}</h2>
-      <div class="np-chapter">Chapter ${player.index + 1} of ${player.chapters.length} · ${esc(ch.title)}</div>
+      ${single() ? '' : `<div class="np-chapter">Chapter ${player.index + 1} of ${player.chapters.length} · ${esc(ch.title)}</div>`}
       <div class="np-by">${by}</div>
     </div>
     <div class="np-seek">
@@ -118,11 +119,11 @@ function nowHTML() {
       <div class="np-times"><span id="fp-cur">0:00</span><span id="fp-dur">0:00</span></div>
     </div>
     <div class="np-main">
-      <button class="pbtn" data-act="prev" aria-label="Previous chapter">${I.prev}</button>
+      ${single() ? '' : `<button class="pbtn" data-act="prev" aria-label="Previous chapter">${I.prev}</button>`}
       <button class="pbtn" data-act="rew" aria-label="Back 10 seconds">${I.rew}</button>
       <button class="pbtn play big" data-act="toggle" aria-label="Play"></button>
       <button class="pbtn" data-act="fwd" aria-label="Forward 30 seconds">${I.fwd}</button>
-      <button class="pbtn" data-act="next" aria-label="Next chapter">${I.next}</button>
+      ${single() ? '' : `<button class="pbtn" data-act="next" aria-label="Next chapter">${I.next}</button>`}
     </div>
     <div class="np-tools">
       <button class="tool" data-act="speed" aria-label="Playback speed"><b id="fp-speed">1x</b><span>Speed</span></button>
@@ -161,7 +162,7 @@ function aboutHTML() {
     ${row('Narrated by', esc(s.narrator))}
     ${row('Category', esc(s.category?.name))}
     ${row('Length', fmtDuration(s.duration_seconds))}
-    ${row('Chapters', String(player.chapters.length))}
+    ${single() ? '' : row('Chapters', String(player.chapters.length))}
     ${row('Access', s.access === 'premium' ? '<span class="pill premium">Premium</span>' : '<span class="pill free">Free</span>')}
     ${(s.themes || []).length ? `<div class="themes">${s.themes.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>` : ''}
     <a class="btn btn-sm" href="#/story/${encodeURIComponent(s.slug)}" style="margin-top:16px">Open story page</a>
