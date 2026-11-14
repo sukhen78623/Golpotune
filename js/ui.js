@@ -7,7 +7,7 @@ export const GENRE_FALLBACK = ['Horror', 'Thriller', 'Mystery', 'Romance', 'Fant
   .map(n => ({ name: n, slug: n.toLowerCase() }));
 
 // The GolpoTune logo: an animated sound-wave mark + "Golpo" + a handwritten, gently waving "Tune"
-export const logo = () => `<span class="logo" role="img" aria-label="GolpoTune"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="g" aria-hidden="true">Golpo</span><span class="t" aria-hidden="true">${[...'Tune'].map((c, i) => `<b style="--i:${i}">${c}</b>`).join('')}</span></span>`;
+export const logo = () => `<span class="logo" role="img" aria-label="GolpoTune"><span class="g" aria-hidden="true">Golpo</span><span class="t" aria-hidden="true">Tune</span></span>`;
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
