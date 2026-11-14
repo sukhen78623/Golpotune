@@ -11,6 +11,10 @@ export const isPremium = () => {
     (!m.current_period_end || new Date(m.current_period_end) > new Date());
 };
 
+// can this person start listening to this story? (the server checks again before sending audio)
+export const canListen = s =>
+  s.access !== 'premium' || isPremium() || auth.profile?.role === 'admin';
+
 async function setUser(user) {
   auth.user = user;
   if (!user) { auth.profile = null; auth.membership = null; auth.favs = new Set(); return; }

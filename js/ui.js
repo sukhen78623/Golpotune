@@ -1,6 +1,12 @@
 // Small helpers that build pieces of the interface.
 import { auth } from './auth.js';
 
+export const GENDERS = [['male', 'Male'], ['female', 'Female'], ['other', 'Other'], ['prefer_not', 'Prefer not to say']];
+export const genderLabel = k => (GENDERS.find(g => g[0] === k) || [])[1] || '';
+export const GENRE_EMOJI = { horror: '👻', thriller: '⚡', mystery: '🔍', romance: '💖', fantasy: '🐉', fiction: '📖', adventure: '🧭', drama: '🎭', biography: '👤' };
+export const GENRE_FALLBACK = ['Horror', 'Thriller', 'Mystery', 'Romance', 'Fantasy', 'Fiction', 'Adventure', 'Drama', 'Biography']
+  .map(n => ({ name: n, slug: n.toLowerCase() }));
+
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -20,19 +26,17 @@ export function toast(msg, type = '') {
   setTimeout(() => t.remove(), 3400);
 }
 
-export const logo = () => '<span class="lg-g">Golpo</span><span class="lg-t">Tune</span>';
-
 const GRADS = {
   horror: ['#3a0d1f', '#b02a52'], thriller: ['#0f2027', '#2c7a96'], mystery: ['#1f1c3a', '#6d5bb5'],
   romance: ['#5b1a3a', '#ff6b9d'], fantasy: ['#1d2b64', '#9a5cf0'], fiction: ['#134e5e', '#71b280'],
   adventure: ['#7a3e00', '#f2a65a'], drama: ['#3a1c71', '#d76d77'], biography: ['#2b2d34', '#8a93ad'],
 };
 export const gradFor = slug => {
-  const g = GRADS[slug] || ['#12303a', '#2a7f8c'];
+  const g = GRADS[slug] || ['#25223d', '#5a4fa0'];
   return `linear-gradient(145deg,${g[0]},${g[1]})`;
 };
 
-const ICON = {
+export const ICON = {
   heart: '<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-9.5-10.3C1.6 7.6 3.5 5 6.4 5c1.9 0 3.4 1 4.1 2.2h3C14.2 6 15.7 5 17.6 5c2.9 0 4.8 2.6 3.9 5.7C20 15.8 12 21 12 21z" stroke-linejoin="round"/></svg>',
   play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
   home: '<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
@@ -60,7 +64,7 @@ export function storyCard(s, { pct = null } = {}) {
     <div class="card-media">
       <a href="${href}" tabindex="-1" aria-hidden="true">${cover(s)}</a>
       ${badge(s)}${favBtn(s)}
-      <a class="play-fab" href="${href}" aria-label="Open ${esc(s.title)}">${ICON.play}</a>
+      <button class="play-fab" data-play="${esc(s.id)}" aria-label="Play ${esc(s.title)}">${ICON.play}</button>
     </div>
     <a class="card-title" href="${href}">${esc(s.title)}</a>
     <div class="card-meta">${esc(s.category?.name || 'Story')} · ${fmtDuration(s.duration_seconds)}</div>
@@ -91,11 +95,10 @@ export const skeletonGrid = () =>
 
 // top bar + mobile bottom bar
 export function renderChrome(name) {
-  document.body.classList.toggle('focus', name === 'signup');
   const initial = esc((auth.profile?.display_name || auth.user?.email || '?').charAt(0).toUpperCase());
   const links = [['#/', 'Home', 'home'], ['#/browse', 'Browse', 'browse'], ['#/library', 'Library', 'library']];
   document.getElementById('topbar').innerHTML = `
-    <a class="logo" href="#/" aria-label="GolpoTune home">${logo()}</a>
+    <a class="logo" href="#/" aria-label="GolpoTune home"><span class="g">Golpo</span><span class="t">Tune</span></a>
     <nav class="topnav" aria-label="Main">
       ${links.map(([h, t, k]) => `<a href="${h}" class="${name === k ? 'on' : ''}">${t}</a>`).join('')}
     </nav>
