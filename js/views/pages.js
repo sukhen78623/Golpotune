@@ -24,7 +24,10 @@ function doc(root, title, body, { updated = true } = {}) {
 
 export function about(root) {
   doc(root, 'About GolpoTune', `
-    <p class="lead">GolpoTune is your favourite audio station for stories. Thrillers, horror, mystery, romance, fantasy, drama and more, told in a voice and ready to listen to wherever you are.</p>
+    <p class="lead">${biz()} is a new-generation audio story listening platform. GolpoTune is your favourite audio station for stories: thrillers, horror, mystery, romance, fantasy, drama and more, told in a voice and ready to listen to wherever you are.</p>
+
+    <h2>Who created GolpoTune</h2>
+    <p>GolpoTune was created by <b>Sukhendu Roy</b>, who lives in Howrah, West Bengal, India. He enjoys turning ideas into real-world products, and GolpoTune began with a simple wish: a calm, ad-free place where anyone can sit back and listen to a good story.</p>
 
     <h2>What you can do</h2>
     <ul>

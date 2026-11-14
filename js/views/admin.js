@@ -12,6 +12,9 @@ const slugify = t => (String(t).toLowerCase().normalize('NFKD').replace(/[^\w\s-
 const rand = () => Math.random().toString(36).slice(2, 6);
 const ext = name => ((name.split('.').pop() || 'mp3').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp3');
 const dateIn = d => (d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+// file name inside the public "covers" bucket, or null if the picture is not stored there
+const coverPath = u => { const m = /\/covers\/([^?#]+)/.exec(u || ''); return m ? decodeURIComponent(m[1]) : null; };
+const dropCover = async u => { const p = coverPath(u); if (p) await sb.storage.from('covers').remove([p]).catch(() => {}); };
 const errText = e => (e && (e.message || e.error_description)) || 'Something went wrong';
 
 function audioDuration(file) {
@@ -130,6 +133,7 @@ async function storyList(body, stale) {
 }
 
 async function deleteStory(id) {
+  const cv = must(await sb.from('stories').select('cover_url').eq('id', id).maybeSingle());
   const chs = must(await sb.from('chapters').select('id').eq('story_id', id));
   const ids = chs.map(c => c.id);
   if (ids.length) {
@@ -144,6 +148,7 @@ async function deleteStory(id) {
   }
   if (ids.length) await sb.from('chapters').delete().eq('story_id', id);
   must(await sb.from('stories').delete().eq('id', id));
+  if (cv?.cover_url) await dropCover(cv.cover_url);
 }
 
 /* ================= story editor ================= */
@@ -157,6 +162,7 @@ async function storyEditor(body, id, stale) {
   if (!isNew && !story) { body.innerHTML = emptyState('Story not found', 'It may have been deleted.', '<a class="btn" href="#/admin/stories">Back</a>'); return; }
   const s = story || { title: '', description: '', author: '', narrator: '', access: 'free', is_published: false, themes: [], cover_url: '' };
   let cover = s.cover_url || '';
+  let pending = '';   // a cover uploaded in this editor but not saved yet
 
   body.innerHTML = `
     <div class="adm-bar"><a class="btn btn-sm" href="#/admin/stories">← All stories</a><h2 class="adm-h">${isNew ? 'New story' : 'Edit story'}</h2></div>
@@ -193,7 +199,9 @@ async function storyEditor(body, id, stale) {
       const path = `${Date.now()}-${rand()}.${ext(f.name)}`;
       const up = await sb.storage.from('covers').upload(path, f, { contentType: f.type || 'image/jpeg' });
       if (up.error) throw up.error;
+      if (pending) await dropCover(pending);
       cover = sb.storage.from('covers').getPublicUrl(path).data.publicUrl;
+      pending = cover;
       prev.innerHTML = `<img src="${esc(cover)}" alt="">`;
       toast('Cover uploaded. Press Save to keep it.');
     } catch (err) { prev.innerHTML = '<span>♪</span>'; toast(errText(err), 'err'); }
@@ -231,7 +239,10 @@ async function storyEditor(body, id, stale) {
         toast('Saved. Now add the chapters.');
         location.hash = `#/admin/story/${saved.id}`;
       } else {
+        const prevCover = s.cover_url;
         must(await sb.from('stories').update(row).eq('id', id));
+        if (prevCover && prevCover !== row.cover_url) await dropCover(prevCover);   // old picture is removed automatically
+        pending = '';
         Object.assign(s, row);
         toast('Changes saved');
       }
