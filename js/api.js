@@ -103,15 +103,19 @@ export async function updateDisplayName(name) {
 }
 
 /* ---------- audio access (secure) ---------- */
-// Asks our secure server function for a short-lived listening link.
+// Audio files live in a PRIVATE Supabase Storage bucket called "audio".
+// The database first checks the listener is allowed, then we get a link that works for 2 hours.
+// (Later, when we move to Cloudflare R2, only this one function changes.)
+const AUDIO_BUCKET = 'audio';
+const AUDIO_LINK_SECONDS = 7200;
+
 export async function getAudioUrl(chapterId) {
-  const { data, error } = await sb.functions.invoke('get-audio', { body: { chapter_id: chapterId } });
-  if (error) {
-    let msg = error.message;
-    try { const j = await error.context.json(); if (j?.error) msg = j.error; } catch { /* keep default */ }
-    throw new Error(msg);
-  }
-  return data.url;
+  const { data: path, error } = await sb.rpc('audio_path_for_chapter', { p_chapter_id: chapterId });
+  if (error) throw new Error(error.message || 'Could not load audio.');
+  if (!path) throw new Error('Audio for this chapter has not been uploaded yet.');
+  const { data, error: e2 } = await sb.storage.from(AUDIO_BUCKET).createSignedUrl(path, AUDIO_LINK_SECONDS);
+  if (e2 || !data?.signedUrl) throw new Error('Could not open this audio file. Please try again.');
+  return data.signedUrl;
 }
 
 /* ---------- progress, history, settings ---------- */
