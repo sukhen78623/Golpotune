@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>GolpoTune - Your favourite audio station</title>
   <meta name="description" content="GolpoTune - your favourite audio station for stories.">
-  <meta name="theme-color" content="#08071a">
+  <meta name="theme-color" content="#12070c">
   <script>
     // remember if this visit came from an email link (the address is cleaned up afterwards)
     (function () {
@@ -17,16 +17,19 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/player.css">
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
   <a class="skip" href="#app">Skip to content</a>
   <header class="topbar" id="topbar"></header>
-  <main id="app" tabindex="-1"></main>
+  <main id="app" tabindex="-1">
+    <div class="boot" id="boot"><div class="boot-spin"></div><p>Loading GolpoTune&hellip;</p></div>
+  </main>
   <footer class="footer">
-    <span class="logo"><span class="g">Golpo</span><span class="t">Tune</span></span>
+    <span class="logo" role="img" aria-label="GolpoTune"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="g" aria-hidden="true">Golpo</span><span class="t" aria-hidden="true"><b style="--i:0">T</b><b style="--i:1">u</b><b style="--i:2">n</b><b style="--i:3">e</b></span></span>
     <p class="tag">Your favourite audio station</p>
     <nav class="footer-links" aria-label="About and policies">
       <a href="#/about">About</a>
@@ -45,6 +48,25 @@
   <section class="fullplayer" id="fullplayer" role="dialog" aria-modal="true" aria-label="Audio player" hidden></section>
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script>
+    // if the site cannot start, show why instead of a blank page
+    (function () {
+      var errs = [];
+      window.addEventListener('error', function (e) {
+        if (e.target && e.target !== window && e.target.tagName !== 'SCRIPT') return;
+        errs.push((e.message || 'Could not load a file') + (e.target && e.target.src ? ' (' + e.target.src.split('/').slice(-2).join('/') + ')' : ''));
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) { errs.push(String((e.reason && e.reason.message) || e.reason)); });
+      setTimeout(function () {
+        var b = document.getElementById('boot');
+        if (!b) return;
+        b.innerHTML = '<h2>GolpoTune could not start</h2><p>Please check your internet and refresh. If this stays, take a screenshot of this screen and send it to us.</p>';
+        var pre = document.createElement('pre');
+        pre.textContent = errs.length ? errs.slice(0, 4).join('\n') : 'No error message was reported.';
+        b.appendChild(pre);
+      }, 8000);
+    })();
+  </script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
