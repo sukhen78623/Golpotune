@@ -7,7 +7,7 @@ export const GENRE_FALLBACK = ['Horror', 'Thriller', 'Mystery', 'Romance', 'Fant
   .map(n => ({ name: n, slug: n.toLowerCase() }));
 
 // The GolpoTune logo: an animated sound-wave mark + "Golpo" + a handwritten, gently waving "Tune"
-export const logo = () => `<span class="logo" role="img" aria-label="GolpoTune"><span class="g" aria-hidden="true">Golpo</span><span class="t" aria-hidden="true">Tune</span></span>`;
+export const logo = (intro = false) => `<span class="logo${intro ? ' intro' : ''}" role="img" aria-label="GolpoTune"><span class="g" aria-hidden="true">Golpo</span><span class="t" aria-hidden="true"><span class="w">Tune</span><span class="dots"><i></i><i></i><i></i><i></i></span></span></span>`;
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -102,8 +102,11 @@ export function renderChrome(name) {
   const links = [['#/', 'Home', 'home'], ['#/browse', 'Browse', 'browse'], ['#/library', 'Library', 'library']];
   const isAdmin = auth.profile?.role === 'admin';
   if (isAdmin) links.push(['#/admin', 'Admin', 'admin']);
-  document.getElementById('topbar').innerHTML = `
-    <a class="logo-link" href="#/" aria-label="GolpoTune home">${logo()}</a>
+  // keep the same logo element between pages so its 4-dot intro plays once per visit
+  const bar = document.getElementById('topbar');
+  const keepLogo = bar.querySelector('.logo-link');
+  bar.innerHTML = `
+    <a class="logo-link" href="#/" aria-label="GolpoTune home">${logo(true)}</a>
     <nav class="topnav" aria-label="Main">
       ${links.map(([h, t, k]) => `<a href="${h}" class="${name === k ? 'on' : ''}">${t}</a>`).join('')}
     </nav>
@@ -112,6 +115,7 @@ export function renderChrome(name) {
         ? `<a class="avatar" href="#/account" aria-label="My account">${initial}</a>`
         : `<a class="btn btn-ghost btn-sm" href="#/login">Log in</a><a class="btn btn-primary btn-sm" href="#/signup">Sign up</a>`}
     </div>`;
+  if (keepLogo) bar.querySelector('.logo-link').replaceWith(keepLogo);
   const tabs = [...links.map(([h, t, k]) => [h, t, k]),
     auth.user ? ['#/account', 'Account', 'account'] : ['#/login', 'Log in', 'login']];
   document.getElementById('bottomnav').innerHTML = tabs.map(([h, t, k]) =>
