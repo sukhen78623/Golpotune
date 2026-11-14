@@ -1,94 +1,87 @@
-import { getHomeData, getContinueListening, getPicksForGenres } from '../api.js';
+import { getHomeData, getContinueListening } from '../api.js';
 import { auth } from '../auth.js';
 import { esc, gradFor, cover, favBtn, fmtDuration, storyCard, sectionRow, emptyState, errorState, skeletonHome } from '../ui.js';
 
-function slide(s, i, n) {
+const ARROW_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+const ARROW_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+
+function slide(s, i, total) {
   const href = `#/story/${encodeURIComponent(s.slug)}`;
   const meta = [s.category?.name, s.author && `by ${s.author}`, fmtDuration(s.duration_seconds), s.access === 'premium' ? 'Premium' : 'Free']
     .filter(Boolean).map(esc).join(' · ');
   return `
-  <section class="hero" style="--g:${gradFor(s.category?.slug)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${n}">
+  <section class="hero" style="--g:${gradFor(s.category?.slug)}" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
     <div class="hero-text">
       <div class="eyebrow">Featured story</div>
       <h1>${esc(s.title)}</h1>
       <div class="meta">${meta}</div>
       <p class="desc">${esc(s.description || '')}</p>
-      <div class="hero-actions"><a class="btn btn-primary" href="${href}">Listen now</a>${favBtn(s)}</div>
+      <div class="hero-actions"><button class="btn btn-primary" data-play="${esc(s.id)}">Listen now</button>${favBtn(s)}<a class="btn btn-ghost btn-sm" href="${href}">Details</a></div>
     </div>
     <div class="hero-cover">${cover(s)}</div>
   </section>`;
 }
 
-function slider(list) {
-  if (!list.length) return '';
+function heroSlider(list) {
   const many = list.length > 1;
   return `
   <div class="hero-slider" role="region" aria-roledescription="carousel" aria-label="Featured stories">
     <div class="hero-track">${list.map((s, i) => slide(s, i, list.length)).join('')}</div>
     ${many ? `
-    <button type="button" class="hero-arrow prev" data-dir="-1" aria-label="Previous featured story">&#8249;</button>
-    <button type="button" class="hero-arrow next" data-dir="1" aria-label="Next featured story">&#8250;</button>
-    <div class="hero-dots">${list.map((_, i) =>
-      `<button type="button" class="dot${i === 0 ? ' on' : ''}" data-go="${i}" aria-label="Show featured story ${i + 1}"></button>`).join('')}</div>` : ''}
+    <button class="hero-arrow prev" type="button" aria-label="Previous featured story">${ARROW_L}</button>
+    <button class="hero-arrow next" type="button" aria-label="Next featured story">${ARROW_R}</button>
+    <div class="hero-dots">${list.map((_, i) => `<button type="button" class="hero-dot${i === 0 ? ' on' : ''}" data-slide="${i}" aria-label="Show featured story ${i + 1}"></button>`).join('')}</div>` : ''}
   </div>`;
 }
 
-// Swipe (native scroll-snap), dots, arrows and a gentle auto-slide.
-function initSlider(root) {
-  const el = root.querySelector('.hero-slider');
-  const track = el?.querySelector('.hero-track');
-  const dots = el ? [...el.querySelectorAll('.dot')] : [];
-  const n = dots.length;
-  if (n < 2) return;
-  let idx = 0, paused = false;
+// slides on its own every few seconds; stops when touched, hovered or focused
+function initHeroSlider(box) {
+  const track = box?.querySelector('.hero-track');
+  if (!track || track.children.length < 2) return;
+  const n = track.children.length, dots = [...box.querySelectorAll('.hero-dot')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let i = 0, hover = false, lastTouch = 0;
 
-  const go = i => track.scrollTo({ left: (((i % n) + n) % n) * track.clientWidth, behavior: 'smooth' });
+  const mark = () => dots.forEach((d, k) => { d.classList.toggle('on', k === i); d.setAttribute('aria-current', String(k === i)); });
+  const go = k => {
+    i = (k + n) % n;
+    track.scrollTo({ left: i * track.clientWidth, behavior: reduced ? 'auto' : 'smooth' });
+    mark();
+  };
   track.addEventListener('scroll', () => {
-    const i = Math.round(track.scrollLeft / (track.clientWidth || 1));
-    if (i === idx) return;
-    idx = i;
-    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+    const k = Math.round(track.scrollLeft / track.clientWidth);
+    if (k !== i && k >= 0 && k < n) { i = k; mark(); }
   }, { passive: true });
 
-  el.addEventListener('click', e => {
-    const dot = e.target.closest('[data-go]');
-    const arrow = e.target.closest('[data-dir]');
-    if (dot) go(+dot.dataset.go);
-    else if (arrow) go(idx + +arrow.dataset.dir);
-  });
+  box.querySelector('.prev').addEventListener('click', () => { lastTouch = Date.now(); go(i - 1); });
+  box.querySelector('.next').addEventListener('click', () => { lastTouch = Date.now(); go(i + 1); });
+  dots.forEach(d => d.addEventListener('click', () => { lastTouch = Date.now(); go(Number(d.dataset.slide)); }));
 
-  // keep the current slide in place if the screen is rotated / resized
-  if ('ResizeObserver' in window) new ResizeObserver(() => { track.scrollLeft = idx * track.clientWidth; }).observe(track);
+  const touched = () => { lastTouch = Date.now(); };
+  box.addEventListener('mouseenter', () => { hover = true; });
+  box.addEventListener('mouseleave', () => { hover = false; });
+  box.addEventListener('focusin', () => { hover = true; });
+  box.addEventListener('focusout', () => { hover = false; });
+  ['touchstart', 'pointerdown', 'keydown'].forEach(ev => box.addEventListener(ev, touched, { passive: true }));
 
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (reduced) return; // people who prefer less motion swipe or use the arrows themselves
   const timer = setInterval(() => {
-    if (!document.body.contains(el)) { clearInterval(timer); return; }  // user left the home page
-    if (!paused && !document.hidden) go(idx + 1);
-  }, 5000);
-  const pause = () => { paused = true; }, resume = () => { paused = false; };
-  el.addEventListener('pointerenter', pause); el.addEventListener('pointerleave', resume);
-  el.addEventListener('touchstart', pause, { passive: true }); el.addEventListener('touchend', resume, { passive: true });
-  el.addEventListener('focusin', pause); el.addEventListener('focusout', resume);
+    if (!document.body.contains(box)) { clearInterval(timer); return; } // page changed
+    if (document.hidden || hover || Date.now() - lastTouch < 7000) return;
+    go(i + 1);
+  }, 5500);
 }
 
 export async function home(root, _p, ctx) {
   root.innerHTML = skeletonHome();
   try {
-    const genres = auth.user?.user_metadata?.genres || [];
-    const [data, cont, picks] = await Promise.all([
-      getHomeData(),
-      auth.user ? getContinueListening() : [],
-      genres.length ? getPicksForGenres(genres).catch(() => []) : [],
-    ]);
+    const [data, cont] = await Promise.all([getHomeData(), auth.user ? getContinueListening() : []]);
     if (ctx.stale()) return;
     if (!data.heroes.length && !data.sections.length) {
       root.innerHTML = emptyState('New stories are on the way', 'Nothing has been published yet. Please check back soon.');
       return;
     }
-    let html = slider(data.heroes);
-    if (picks.length) {
-      html += sectionRow('Picked for you', picks.map(x => storyCard(x)).join(''));
-    }
+    let html = data.heroes.length ? heroSlider(data.heroes) : '';
     if (cont.length) {
       html += sectionRow('Continue Listening', cont.map(c => storyCard(c.story, { pct: c.pct })).join(''));
     }
@@ -96,7 +89,7 @@ export async function home(root, _p, ctx) {
       <div class="chips">${data.categories.map(c => `<a class="chip" href="#/browse/${esc(c.slug)}">${esc(c.name)}</a>`).join('')}</div></section>`;
     html += data.sections.map(s => sectionRow(s.title, s.stories.map(x => storyCard(x)).join(''))).join('');
     root.innerHTML = html;
-    initSlider(root);
+    initHeroSlider(root.querySelector('.hero-slider'));
   } catch (e) {
     if (!ctx.stale()) root.innerHTML = errorState(e);
   }
