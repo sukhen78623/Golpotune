@@ -6,6 +6,15 @@
   <title>GolpoTune - Your favourite audio station</title>
   <meta name="description" content="GolpoTune - your favourite audio station for stories.">
   <meta name="theme-color" content="#08071a">
+  <script>
+    // remember if this visit came from an email link (the address is cleaned up afterwards)
+    (function () {
+      var h = location.hash || '';
+      window.__fromEmail = /access_token/.test(h) && /type=(signup|email|email_change|invite)/.test(h);
+      var m = h.match(/error_description=([^&]+)/);
+      try { window.__authError = m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : ''; } catch (e) { window.__authError = 'error'; }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -17,7 +26,16 @@
   <header class="topbar" id="topbar"></header>
   <main id="app" tabindex="-1"></main>
   <footer class="footer">
-    <span class="logo"><span class="g">Golpo</span><span class="t">Tune</span></span><br>Your favourite audio station
+    <span class="logo"><span class="g">Golpo</span><span class="t">Tune</span></span>
+    <p class="tag">Your favourite audio station</p>
+    <nav class="footer-links" aria-label="About and policies">
+      <a href="#/about">About</a>
+      <a href="#/terms">Terms of Use</a>
+      <a href="#/privacy">Privacy Policy</a>
+      <a href="#/refund">Refund Policy</a>
+      <a href="#/cancellation">Cancellation Policy</a>
+    </nav>
+    <p class="copy">&copy; <span id="yr">2026</span> GolpoTune. All rights reserved.</p>
   </footer>
   <nav class="bottomnav" id="bottomnav" aria-label="Main"></nav>
 
