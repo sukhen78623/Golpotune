@@ -36,6 +36,7 @@ export function duration() {
   return Number.isFinite(d) && d > 0 ? d : (currentChapter()?.duration_seconds || 0);
 }
 
+let storyHeard = 0, storyCounted = false;
 let pendingSeek = null, retried = false, lastSave = 0, lastTime = 0, listenAccum = 0;
 let loadToken = 0, sleepTimer = null, unlocked = false;
 
@@ -102,6 +103,8 @@ export function unlock() {
 
 /* ---------------- starting a story ---------------- */
 export async function playStory(storyId, { chapterId = null, position = null, autoplay = true } = {}) {
+  // listening needs an account
+  if (!auth.user) { toast('Please log in to listen to stories'); location.hash = '#/login'; return; }
   // same story already loaded: just continue / jump
   if (player.story?.id === storyId) {
     if (chapterId) {
@@ -129,7 +132,7 @@ export async function playStory(storyId, { chapterId = null, position = null, au
   player.story = s;
   player.chapters = res.chapters;
   player.index = 0;
-  countPlay(s.id);
+  storyHeard = 0; storyCounted = false;
 
   let idx = 0, pos = 0;
   if (chapterId) {
@@ -301,7 +304,12 @@ function countPlay(id) {
 function onTime() {
   if (!live()) return;
   const t = audio.currentTime, d = t - lastTime;
-  if (player.playing && d > 0 && d < 3) listenAccum += d;
+  if (player.playing && d > 0 && d < 3) {
+    listenAccum += d;
+    // a "listen" is counted after 30 seconds of real listening, once per story per visit
+    storyHeard += d;
+    if (!storyCounted && storyHeard >= 30 && player.story) { storyCounted = true; countPlay(player.story.id); }
+  }
   lastTime = t;
   emit('time');
   const now = Date.now();
