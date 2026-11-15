@@ -1,11 +1,15 @@
 // Library (favourites) and My Profile pages.
 import { sb } from '../supabase.js';
+import { CONFIG } from '../config.js';
 import { auth, isPremium } from '../auth.js';
 import { getFavouriteStories, getCategories, updateProfile } from '../api.js';
 import {
   esc, storyCard, emptyState, errorState, skeletonGrid, toast, renderChrome,
   GENDERS, GENRE_FALLBACK, genderLabel,
 } from '../ui.js';
+
+const dateIn = d => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+const mailLink = () => `<a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">${esc(CONFIG.SUPPORT_EMAIL)}</a>`;
 
 const loginPrompt = (title, text) =>
   emptyState(title, text, '<a class="btn btn-primary" href="#/login">Log in</a> <a class="btn" href="#/signup">Sign up</a>');
@@ -36,6 +40,7 @@ export async function account(root, _p, ctx) {
     const p = auth.profile || {};
     const name = p.display_name || auth.user.email.split('@')[0];
     const premium = isPremium();
+    const m = auth.membership || {};
     const none = '<span class="muted">Not added</span>';
     const row = (k, v) => `<div class="kv"><span>${k}</span><span>${v ? esc(v) : none}</span></div>`;
     const since = auth.user.created_at
@@ -69,12 +74,23 @@ export async function account(root, _p, ctx) {
           : '<p class="muted">You have not chosen any genres yet.</p>'}
         <button class="btn btn-sm" data-edit style="margin-top:12px">${interests.length ? 'Change genres' : 'Add genres'}</button>
       </div>
-      <div class="panel">
+      <div class="panel member">
         <h3>Membership</h3>
-        <div class="kv"><span>Current plan</span><span class="pill ${premium ? 'premium' : 'free'}">${premium ? 'Premium' : 'Free'}</span></div>
-        <p class="muted" style="margin-top:10px;font-size:.92rem">${premium
-          ? 'You can listen to every Premium story.'
-          : 'Premium plans are not open yet. Payments will be connected in a later step.'}</p>
+        <div class="member-now ${premium ? 'is-premium' : ''}">
+          <div><span class="muted">Your plan</span><b>${premium ? 'Premium' : 'Free'}</b></div>
+          <span class="pill ${premium ? 'premium' : 'free'}">${premium ? 'Active' : 'Current plan'}</span>
+        </div>
+        ${premium ? `<div class="kv"><span>${m.current_period_end ? 'Valid until' : 'Validity'}</span><span>${m.current_period_end ? esc(dateIn(m.current_period_end)) : 'No end date'}</span></div>` : ''}
+        <div class="plan-grid">
+          <div class="plan ${premium ? '' : 'on'}"><h4>Free</h4>
+            <ul><li>Free stories</li><li>Favourites and playlists</li><li>Listening history and statistics</li><li>Sleep timer, speed and bookmarks</li><li>No ads</li></ul></div>
+          <div class="plan ${premium ? 'on' : ''}"><h4>Premium</h4>
+            <ul><li>Everything in Free</li><li>All Premium-exclusive stories</li><li>New stories first</li><li>No ads</li></ul></div>
+        </div>
+        ${premium
+          ? '<p class="muted">Thank you for supporting GolpoTune. You can listen to every Premium story.</p>'
+          : `<p class="muted">Premium plans are coming soon. Want early access? Write to ${mailLink()} and we will get back to you.</p>
+             <button class="btn" disabled>Premium coming soon</button>`}
       </div>
       <div class="panel"><button class="btn" id="logoutBtn">Log out</button></div>
     </div>`;
