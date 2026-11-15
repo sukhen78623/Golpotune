@@ -7,7 +7,8 @@ import { home } from './views/home.js';
 import { browse } from './views/browse.js';
 import { story } from './views/story.js';
 import { login, signup, forgot, reset, hold } from './views/auth.js';
-import { library, account } from './views/me.js';
+import { account } from './views/me.js';
+import { library } from './views/library.js';
 import { about, terms, privacy, refund, cancellation } from './views/pages.js';
 import { initPlayer, playStory, unlock } from './player/engine.js';
 import { initPlayerUI } from './player/ui.js';
@@ -16,7 +17,7 @@ const routes = [
   [/^$/, 'home', home],
   [/^browse(?:\/([\w-]+))?$/, 'browse', browse],
   [/^story\/([^/]+)$/, 'browse', story],
-  [/^library$/, 'library', library],
+  [/^library(?:\/(\w+))?$/, 'library', library],
   [/^account$/, 'account', account],
   [/^login$/, 'login', login],
   [/^signup$/, 'login', signup],
