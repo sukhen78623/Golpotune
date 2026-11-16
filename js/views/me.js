@@ -92,9 +92,37 @@ export async function account(root, _p, ctx) {
           : `<p class="muted">Premium plans are coming soon. Want early access? Write to ${mailLink()} and we will get back to you.</p>
              <button class="btn" disabled>Premium coming soon</button>`}
       </div>
-      <div class="panel"><button class="btn" id="logoutBtn">Log out</button></div>
+      <div class="panel">
+        <h3>Account and security</h3>
+        <form id="pwForm" class="acc-form" novalidate>
+          <label class="field"><span>New password</span><input name="pw" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters"></label>
+          <label class="field"><span>Confirm new password</span><input name="pw2" type="password" minlength="8" autocomplete="new-password"></label>
+          <button class="btn btn-sm" type="submit">Change password</button>
+        </form>
+      </div>
+      <div class="panel"><button class="btn" id="logoutBtn">Log out</button>
+        <button class="btn danger" id="delBtn" style="margin-left:8px">Delete my account</button></div>
     </div>`;
     root.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => { editing = true; render(); }));
+    root.querySelector('#pwForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = new FormData(e.target), pw = f.get('pw') || '', pw2 = f.get('pw2') || '';
+      if (pw.length < 8) { toast('Password must be at least 8 characters', 'err'); return; }
+      if (pw !== pw2) { toast('The two passwords do not match', 'err'); return; }
+      const { error } = await sb.auth.updateUser({ password: pw });
+      if (error) toast(error.message || 'Could not change password', 'err');
+      else { toast('Password changed'); e.target.reset(); }
+    });
+    root.querySelector('#delBtn').addEventListener('click', async () => {
+      const t = prompt('This permanently deletes your account, favourites, playlists and history. This cannot be undone.\n\nType DELETE to confirm:');
+      if (t === null) return;
+      if (t.trim() !== 'DELETE') { toast('Account was not deleted. You must type DELETE.'); return; }
+      const { error } = await sb.rpc('delete_my_account');
+      if (error) { toast(error.message || 'Could not delete the account', 'err'); return; }
+      await sb.auth.signOut().catch(() => {});
+      toast('Your account has been deleted');
+      location.hash = '#/';
+    });
     root.querySelector('#logoutBtn').addEventListener('click', async () => {
       await sb.auth.signOut();
       location.hash = '#/';
