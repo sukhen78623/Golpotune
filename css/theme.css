@@ -32,11 +32,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
 h1,h2,h3{font-family:Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-.02em}
 .cover .ph{font-family:Inter,system-ui,sans-serif;font-weight:700}
 
+/* ---------- smaller text everywhere (the logo keeps its own fixed size) ---------- */
+html{font-size:13.5px}
+body{font-size:13.5px}
+@media(min-width:800px){html{font-size:14.5px}body{font-size:14.5px}}
+
 /* ---------- logo: music note + "Golpo" (white) + "Tune" (colour), simple Times New Roman style ---------- */
 .logo-link{display:inline-flex;align-items:center;--s:1}
 .logo-link.lg{--s:1.45}
 .logo{display:inline-flex;align-items:center;gap:calc(7px*var(--s,1));line-height:1;white-space:nowrap;
-  font-family:'Times New Roman',Times,'Liberation Serif',serif;font-weight:700;font-size:calc(1.6rem*var(--s,1));letter-spacing:.005em}
+  font-family:'Times New Roman',Times,'Liberation Serif',serif;font-weight:700;font-size:calc(25.6px*var(--s,1));letter-spacing:.005em}
 .logo .ico{flex:none;width:calc(22px*var(--s,1));height:calc(22px*var(--s,1));fill:var(--accent-hi)}
 .logo .g,.logo .t{font:inherit;letter-spacing:inherit}
 .logo .g{color:#fff}
@@ -230,3 +235,9 @@ h1,h2,h3{font-family:Inter,system-ui,sans-serif;font-weight:700;letter-spacing:-
 .plan h4{margin:0 0 8px;font-size:1.05rem}
 .plan ul{margin:0;padding-left:18px;color:var(--muted);font-size:.92rem;line-height:1.7}
 .member .btn[disabled]{opacity:.5;pointer-events:none}
+
+/* account settings */
+.acc-form{max-width:420px}
+.acc-form .field input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border);background:rgba(255,255,255,.06);color:var(--text);font:inherit;outline:none}
+.acc-form .field input:focus{border-color:var(--accent-hi);box-shadow:0 0 0 3px rgba(196,71,111,.25)}
+#delBtn{color:var(--danger);border-color:rgba(255,128,149,.4)}
