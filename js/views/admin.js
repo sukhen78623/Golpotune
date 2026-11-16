@@ -1,10 +1,11 @@
 // GolpoTune admin dashboard: stories, chapters + audio, covers, home page, users, genres.
 import { sb } from '../supabase.js';
 import { auth } from '../auth.js';
+import * as api from '../api.js';
 import { esc, toast, emptyState, fmtDuration } from '../ui.js';
 
 const must = r => { if (r.error) throw r.error; return r.data; };
-const MAX_AUDIO = 50 * 1024 * 1024;   // Supabase free plan limit per file
+const MAX_AUDIO = 50 * 1024 * 1024;   // audio size limit per file
 const MAX_COVER = 5 * 1024 * 1024;
 const TABS = [['', 'Overview'], ['stories', 'Stories'], ['home', 'Home page'], ['users', 'Users'], ['genres', 'Genres']];
 
@@ -139,7 +140,7 @@ async function deleteStory(id) {
   if (ids.length) {
     const au = must(await sb.from('chapter_audio').select('r2_key').in('chapter_id', ids));
     const paths = au.map(a => a.r2_key).filter(Boolean);
-    if (paths.length) await sb.storage.from('audio').remove(paths);
+    if (paths.length) await api.r2DeleteAudio(paths).catch(() => {});
     must(await sb.from('chapter_audio').delete().in('chapter_id', ids));
   }
   // things people saved about this story (ignored if a table does not exist)
@@ -331,7 +332,7 @@ async function chaptersPanel(box, story, stale, onSingle) {
         if (name && name.trim()) { must(await sb.from('chapters').update({ title: name.trim() }).eq('id', id)); await refresh(); }
       } else if (e.target.closest('[data-chdel]')) {
         if (!confirm('Delete this chapter and its audio?')) return;
-        if (audio[id]) await sb.storage.from('audio').remove([audio[id]]);
+        if (audio[id]) await api.r2DeleteAudio([audio[id]]).catch(() => {});
         await sb.from('chapter_audio').delete().eq('chapter_id', id);
         for (const t of ['playback_progress', 'listening_history', 'bookmarks']) await sb.from(t).delete().eq('chapter_id', id);
         must(await sb.from('chapters').delete().eq('id', id));
@@ -380,13 +381,11 @@ async function audioSection(box, story, stale, force) {
 }
 
 async function putAudio(storyId, chapterId, file, oldPath) {
-  const path = `${storyId}/${chapterId}-${Date.now()}.${ext(file.name)}`;
-  const up = await sb.storage.from('audio').upload(path, file, { contentType: file.type || 'audio/mpeg', upsert: false });
-  if (up.error) throw up.error;
+  const key = await api.r2UploadAudio(storyId, chapterId, file);   // goes to Cloudflare R2
   await sb.from('chapter_audio').delete().eq('chapter_id', chapterId);
-  const ins = await sb.from('chapter_audio').insert({ chapter_id: chapterId, r2_key: path });
-  if (ins.error) { await sb.storage.from('audio').remove([path]); throw ins.error; }
-  if (oldPath) await sb.storage.from('audio').remove([oldPath]);
+  const ins = await sb.from('chapter_audio').insert({ chapter_id: chapterId, r2_key: key });
+  if (ins.error) { await api.r2DeleteAudio([key]).catch(() => {}); throw ins.error; }
+  if (oldPath) await api.r2DeleteAudio([oldPath]).catch(() => {});
 }
 
 // story length = sum of its chapters
