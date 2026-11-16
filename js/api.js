@@ -102,20 +102,48 @@ export async function updateDisplayName(name) {
   auth.profile = { ...auth.profile, display_name: name };
 }
 
-/* ---------- audio access (secure) ---------- */
-// Audio files live in a PRIVATE Supabase Storage bucket called "audio".
-// The database first checks the listener is allowed, then we get a link that works for 2 hours.
-// (Later, when we move to Cloudflare R2, only this one function changes.)
-const AUDIO_BUCKET = 'audio';
-const AUDIO_LINK_SECONDS = 7200;
+/* ---------- audio access (secure, Cloudflare R2) ---------- */
+// Audio files live in a PRIVATE Cloudflare R2 bucket called "golpotune-audio".
+// The "r2" Edge Function in Supabase first checks the listener is allowed,
+// then gives a link that works for 2 hours. Uploads and deletes also go through it (admin only).
+async function callR2(body) {
+  const { data, error } = await sb.functions.invoke('r2', { body });
+  if (error) {
+    let msg = error.message;
+    try {
+      const j = await error.context.json();
+      if (j && j.error) msg = j.error;
+    } catch { /* keep the default message */ }
+    throw new Error(msg || 'Something went wrong.');
+  }
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
 
 export async function getAudioUrl(chapterId) {
-  const { data: path, error } = await sb.rpc('audio_path_for_chapter', { p_chapter_id: chapterId });
-  if (error) throw new Error(error.message || 'Could not load audio.');
-  if (!path) throw new Error('Audio for this chapter has not been uploaded yet.');
-  const { data, error: e2 } = await sb.storage.from(AUDIO_BUCKET).createSignedUrl(path, AUDIO_LINK_SECONDS);
-  if (e2 || !data?.signedUrl) throw new Error('Could not open this audio file. Please try again.');
-  return data.signedUrl;
+  const data = await callR2({ action: 'play', chapterId });
+  if (!data || !data.url) throw new Error('Could not open this audio file. Please try again.');
+  return data.url;
+}
+
+// admin: upload one audio file to R2 and return its key (path)
+export async function r2UploadAudio(storyId, chapterId, file) {
+  const ext = ((file.name.split('.').pop() || 'mp3').toLowerCase().replace(/[^a-z0-9]/g, '')) || 'mp3';
+  const { key, url } = await callR2({ action: 'upload', storyId, chapterId, ext });
+  const res = await fetch(url, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': file.type || 'audio/mpeg' },
+  });
+  if (!res.ok) throw new Error('Upload to storage failed (' + res.status + '). Please try again.');
+  return key;
+}
+
+// admin: delete audio files from R2
+export async function r2DeleteAudio(keys) {
+  const list = (keys || []).filter(Boolean);
+  if (!list.length) return;
+  await callR2({ action: 'delete', keys: list });
 }
 
 /* ---------- progress, history, settings ---------- */
